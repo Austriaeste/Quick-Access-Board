@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="x-ua-compatible" content="ie=9">
+  <hta:application 
+    id="myLauncher"
+    applicationname="共有フォルダランチャー"
+    border="thin"
+    caption="yes"
+    maximizebutton="no"
+    minimizebutton="no"
+    showintaskbar="yes"
+    singleinstance="yes"
+    sysmenu="yes"
+    windowstate="normal"
+    scroll="no"
+  />
+  <title>Launcher 3x5</title>
+
+  <style>
+    body {
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 5px;
+      font-family: "Meiryo UI", sans-serif;
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 4px;
+    }
+
+    button {
+      width: 90px;
+      height: 28px;
+      font-size: 11px;
+      background-color: #ffffff;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #374151;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    button:hover {
+      background-color: #0078d7;
+      color: #ffffff;
+      border-color: #005a9e;
+    }
+
+    button:active {
+      background-color: #005a9e;
+    }
+  </style>
+</head>
+
+<body onload="positionWindow()">
+
+  <table>
+    <tr>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share01')">共有 01</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share02')">共有 02</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share03')">共有 03</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share04')">共有 04</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share05')">共有 05</button></td>
+    </tr>
+    <tr>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share06')">共有 06</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share07')">共有 07</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share08')">共有 08</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share09')">共有 09</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share10')">共有 10</button></td>
+    </tr>
+    <tr>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share11')">共有 11</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share12')">共有 12</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share13')">共有 13</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share14')">共有 14</button></td>
+      <td><button onclick="openPath('\\\\192.168.1.10\\share15')">共有 15</button></td>
+    </tr>
+  </table>
+
+  <script language="JavaScript">
+    function openPath(path) {
+      if (!path) return;
+      var shell = new ActiveXObject("WScript.Shell");
+      shell.Run('explorer.exe "' + path + '"', 1, false);
+    }
+
+    function positionWindow() {
+      // 3行 × 5列 用サイズ
+      var winW = 510;
+      var winH = 150;
+      window.resizeTo(winW, winH);
+
+      var screenW = screen.availWidth;
+      var screenH = screen.availHeight;
+
+      // 右下ぴったり配置（余白なし）
+      window.moveTo(screenW - winW, screenH - winH);
+    }
+  </script>
+
+</body>
+</html>
