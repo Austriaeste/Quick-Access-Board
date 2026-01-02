@@ -1,0 +1,50 @@
+Option Explicit
+
+' ----------------------------------------------------------------------------------
+' 生存確認マクロ：フォルダとファイルのどちらでも判定可能
+' ----------------------------------------------------------------------------------
+Sub CheckSurvival()
+    Dim i As Long
+    Dim rowCount As Long
+    Dim fso As Object
+    Dim targetPath As String
+    Dim isExist As Boolean
+    
+    ' FileSystemObjectの準備
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' B列（パス）の最終行を取得
+    rowCount = Cells(Rows.Count, 2).End(xlUp).Row
+    
+    ' 画面更新停止とステータス表示
+    Application.ScreenUpdating = False
+    Application.StatusBar = "フォルダ・ファイルの存在をチェック中..."
+    
+    ' 念のため、既存の背景色を一度クリア（任意）
+    ' Range("B1:B" & rowCount).Interior.ColorIndex = xlNone
+    
+    For i = 1 To rowCount
+        targetPath = Trim(Cells(i, 2).Value)
+        
+        If targetPath <> "" Then
+            ' 【ここがポイント】フォルダかファイルのどちらかがあればTrue
+            isExist = fso.FolderExists(targetPath) Or fso.FileExists(targetPath)
+            
+            If isExist Then
+                ' 存在する場合：薄緑
+                Cells(i, 2).Interior.Color = RGB(200, 255, 200)
+                Cells(i, 2).Font.Color = RGB(0, 0, 0)
+            Else
+                ' 存在しない場合：ピンク
+                Cells(i, 2).Interior.Color = RGB(255, 200, 200)
+                Cells(i, 2).Font.Color = RGB(255, 0, 0)
+            End If
+        End If
+    Next i
+    
+    ' 設定を元に戻す
+    Application.ScreenUpdating = True
+    Application.StatusBar = False
+    
+    MsgBox "チェック完了！" & vbCrLf & "赤色のセルは、パスが間違っているかアクセス権がありません。", vbInformation
+End Sub
