@@ -1,109 +1,84 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="x-ua-compatible" content="ie=9">
-  <hta:application 
-    id="myLauncher"
-    applicationname="共有フォルダランチャー"
-    border="thin"
-    caption="yes"
-    maximizebutton="no"
-    minimizebutton="no"
-    showintaskbar="yes"
-    singleinstance="yes"
-    sysmenu="yes"
-    windowstate="normal"
-    scroll="no"
-  />
-  <title>Launcher 3x5</title>
+Option Explicit
 
-  <style>
-    body {
-      background-color: #f0f2f5;
-      margin: 0;
-      padding: 5px;
-      font-family: "Meiryo UI", sans-serif;
-    }
+Sub GenerateMyLauncher()
+    Dim fso As Object
+    Dim ts As Object
+    Dim htaPath As String
+    Dim i As Long
+    Dim btnHtml As String
+    Dim rowCount As Long
+    Dim shell As Object
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set shell = CreateObject("WScript.Shell")
+    
+    ' 出力先：デスクトップ
+    htaPath = shell.SpecialFolders("Desktop") & "\SharedLauncher.hta"
+    
+    ' A列:名前、B列:パス。データの最終行を取得
+    rowCount = Cells(Rows.Count, 1).End(xlUp).Row
+    btnHtml = "  <table>" & vbCrLf
+    
+    For i = 1 To rowCount
+        ' 5ボタンごとに改行
+        If (i - 1) Mod 5 = 0 Then btnHtml = btnHtml & "    <tr>" & vbCrLf
+        
+        ' パスのエスケープ処理（\を\\に）
+        Dim safePath As String
+        safePath = Replace(Cells(i, 2).Value, "\", "\\")
+        
+        btnHtml = btnHtml & "      <td><button onclick=""openPath('" & safePath & "')"">" & _
+                  Cells(i, 1).Value & "</button></td>" & vbCrLf
+        
+        If i Mod 5 = 0 Or i = rowCount Then btnHtml = btnHtml & "    </tr>" & vbCrLf
+    Next i
+    btnHtml = btnHtml & "  </table>"
 
-    table {
-      border-collapse: separate;
-      border-spacing: 4px;
-    }
+    ' ファイル書き出し（Unicode指定で文字化けを防止）
+    On Error Resume Next
+    Set ts = fso.CreateTextFile(htaPath, True, True)
+    If Err.Number <> 0 Then
+        MsgBox "デスクトップに同名のHTAが開いている可能性があります。閉じてから再実行してください。", vbCritical
+        Exit Sub
+    End If
+    On Error GoTo 0
 
-    button {
-      width: 90px;
-      height: 28px;
-      font-size: 11px;
-      background-color: #ffffff;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      cursor: pointer;
-      color: #374151;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
+    ' --- HTAコードの書き出し ---
+    ts.WriteLine "<!DOCTYPE html><html><head><meta charset=""UTF-16""><meta http-equiv=""x-ua-compatible"" content=""ie=9"">"
+    ts.WriteLine "<hta:application id=""myLauncher"" applicationname=""MyLauncher"" border=""thin"" caption=""yes"" maximizebutton=""no"" minimizebutton=""no"" showintaskbar=""yes"" singleinstance=""yes"" sysmenu=""yes"" windowstate=""normal"" scroll=""no"" />"
+    ts.WriteLine "<title>Shared Launcher</title>"
+    ts.WriteLine "<style>"
+    ts.WriteLine "  body { background-color: #f0f2f5; margin: 0; padding: 5px; font-family: 'Meiryo UI', sans-serif; }"
+    ts.WriteLine "  table { border-collapse: separate; border-spacing: 4px; }"
+    ts.WriteLine "  button { width: 90px; height: 28px; font-size: 11px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 4px; cursor: pointer; color: #374151; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }"
+    ts.WriteLine "  button:hover { background-color: #0078d7; color: #ffffff; border-color: #005a9e; }"
+    ts.WriteLine "</style></head><body onload=""positionWindow()"">"
+    
+    ts.WriteLine btnHtml
+    
+    ' JavaScript部分：ここをセキュリティ回避仕様に変更
+    ts.WriteLine "<script language=""JavaScript"">"
+    ts.WriteLine "  function openPath(path) {"
+    ts.WriteLine "    if (!path) return;"
+    ts.WriteLine "    var shell = new ActiveXObject('WScript.Shell');"
+    ts.WriteLine "    /* 直接explorer.exeを呼ばず、バッチの仕組み(cmd /c start)を利用 */"
+    ts.WriteLine "    var cmdLine = 'cmd /c start """" ""' + path + '""';"
+    ts.WriteLine "    try {"
+    ts.WriteLine "      shell.Run(cmdLine, 0, false);"
+    ts.WriteLine "    } catch(e) {"
+    ts.WriteLine "      alert('起動に失敗しました。パスが正しいか、または権限を確認してください。\\n\\n' + path);"
+    ts.WriteLine "    }"
+    ts.WriteLine "  }"
+    ts.WriteLine "  function positionWindow() {"
+    ts.WriteLine "    var winW = 510; var winH = 150;"
+    ts.WriteLine "    window.resizeTo(winW, winH);"
+    ts.WriteLine "    var screenW = screen.availWidth; var screenH = screen.availHeight;"
+    ts.WriteLine "    window.moveTo(screenW - winW, screenH - winH);"
+    ts.WriteLine "  }"
+    ts.WriteLine "</script></body></html>"
+    
+    ts.Close
+    
+    MsgBox "ランチャーアプリをデスクトップに作成しました。", vbInformation
+End Sub
 
-    button:hover {
-      background-color: #0078d7;
-      color: #ffffff;
-      border-color: #005a9e;
-    }
-
-    button:active {
-      background-color: #005a9e;
-    }
-  </style>
-</head>
-
-<body onload="positionWindow()">
-
-  <table>
-    <tr>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share01')">共有 01</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share02')">共有 02</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share03')">共有 03</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share04')">共有 04</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share05')">共有 05</button></td>
-    </tr>
-    <tr>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share06')">共有 06</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share07')">共有 07</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share08')">共有 08</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share09')">共有 09</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share10')">共有 10</button></td>
-    </tr>
-    <tr>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share11')">共有 11</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share12')">共有 12</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share13')">共有 13</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share14')">共有 14</button></td>
-      <td><button onclick="openPath('\\\\192.168.1.10\\share15')">共有 15</button></td>
-    </tr>
-  </table>
-
-  <script language="JavaScript">
-    function openPath(path) {
-      if (!path) return;
-      var shell = new ActiveXObject("WScript.Shell");
-      shell.Run('explorer.exe "' + path + '"', 1, false);
-    }
-
-    function positionWindow() {
-      // 3行 × 5列 用サイズ
-      var winW = 510;
-      var winH = 150;
-      window.resizeTo(winW, winH);
-
-      var screenW = screen.availWidth;
-      var screenH = screen.availHeight;
-
-      // 右下ぴったり配置（余白なし）
-      window.moveTo(screenW - winW, screenH - winH);
-    }
-  </script>
-
-</body>
-</html>
